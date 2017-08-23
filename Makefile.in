@@ -1,0 +1,130 @@
+# @configure_input@
+
+# Package-related substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-related substitution variables
+datarootdir = @datarootdir@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+mandir      = @mandir@
+datadir     = @datadir@
+
+
+RSRCDIR := RSaddleSum/src
+DOCSDIR := ../enrich/doc/source
+
+.PHONY: all build clean dist distcheck RSaddleSum FORCE
+.PHONY: install uninstall
+
+all: build
+
+build:
+	$(MAKE) -C build
+
+install:
+	$(MAKE) -C build $@
+	install -d ${mandir}/man1
+	install -m 0644 man/saddlesum.1 ${mandir}/man1
+	install -m 0644 man/saddlesum-show-etd.1 ${mandir}/man1
+
+uninstall:
+	$(MAKE) -C build $@
+	rm -f ${mandir}/man1/saddlesum.1
+	rm -f ${mandir}/man1/saddlesum-show-etd.1
+
+clean:
+	-rm -f $(distdir).tar.gz
+	-rm -f RSaddleSum_*.tar.gz
+	$(MAKE) -C build clean
+
+help:
+	python utils/help/make_help.py $(DOCSDIR) include/help.h
+
+dist: $(distdir).tar.gz
+
+$(distdir).tar.gz: FORCE $(distdir)
+	tar chof - $(distdir) |\
+          gzip -9 -c >$(distdir).tar.gz
+	rm -rf $(distdir)
+
+$(distdir):
+	mkdir -p $(distdir)/build
+	mkdir -p $(distdir)/doc/source
+	mkdir -p $(distdir)/examples
+	mkdir -p $(distdir)/external/cephes
+	mkdir -p $(distdir)/external/hashtable
+	mkdir -p $(distdir)/include
+	mkdir -p $(distdir)/lib
+	mkdir -p $(distdir)/man
+	mkdir -p $(distdir)/progs
+	mkdir -p $(distdir)/RSaddleSum/R
+	mkdir -p $(distdir)/RSaddleSum/src
+	mkdir -p $(distdir)/swig
+	mkdir -p $(distdir)/test_data
+	mkdir -p $(distdir)/utils/help
+	cp -a build/Makefile.in $(distdir)/build
+	cp -a doc/Makefile $(distdir)/doc
+	cp -a doc/source/*.* $(distdir)/doc/source
+	cp -a examples/*.tab $(distdir)/examples
+	cp -a examples/*.gmt $(distdir)/examples
+	cp -a external/cephes/*.c $(distdir)/external/cephes
+	cp -a external/hashtable/*.c $(distdir)/external/hashtable
+	cp -a include/*.h $(distdir)/include
+	cp -a lib/*.c $(distdir)/lib
+	cp -a man/*.* $(distdir)/man
+	cp -a progs/*.c $(distdir)/progs
+	cp -a RSaddleSum/R/*.R $(distdir)/RSaddleSum/R
+	cp -a RSaddleSum/src/*.c $(distdir)/RSaddleSum/src
+	cp -a RSaddleSum/DESCRIPTION $(distdir)/RSaddleSum
+	cp -a RSaddleSum/NAMESPACE $(distdir)/RSaddleSum
+	cp -a RSaddleSum/README $(distdir)/RSaddleSum
+	cp -a swig/*.i $(distdir)/swig
+	cp -a swig/Makefile.in $(distdir)/swig
+	cp -a test_data/*.gmt $(distdir)/test_data
+	cp -a test_data/*.tab $(distdir)/test_data
+	cp -a utils/help/*.py $(distdir)/utils/help
+	cp -a utils/help/*.html $(distdir)/utils/help
+	cp -a Makefile.in $(distdir)
+	cp -a configure.ac $(distdir)
+	cp -a configure $(distdir)
+	cp -a COPYING  $(distdir)
+	cp -a README  $(distdir)
+	cp -a AUTHORS  $(distdir)
+
+FORCE:
+	-rm $(distdir).tar.gz &> /dev/null
+	-rm -rf $(distdir) &> /dev/null
+
+distcheck: $(distdir).tar.gz
+	gzip -cd $+ | tar xvf -
+	cd $(distdir); ./configure
+	$(MAKE) -C $(distdir) all clean
+	rm -rf $(distdir)
+	@echo "*** Package $(distdir).tar.gz\
+          ready for distribution."
+
+RSaddleSum:
+	cd lib; \
+	for x in saddlesum.c; \
+	do cp -a $$x ../$(RSRCDIR); done; \
+	cd ../external/cephes; \
+	for x in  *.c; \
+	do cp -a $$x ../../$(RSRCDIR); done; \
+	cd ../../include; \
+	for x in  saddlesum.h mconf.h; \
+	do cp -a $$x ../$(RSRCDIR); done; \
+	cd ../; \
+	R CMD build RSaddleSum; \
+	rm -f $(RSRCDIR)/saddlesum.h $(RSRCDIR)/mconf.h; \
+	cd lib; \
+	for x in saddlesum.c; \
+	do rm -f ../$(RSRCDIR)/$$x; done; \
+	cd ../external/cephes; \
+	for x in  *.c; \
+	do rm -f ../../$(RSRCDIR)/$$x; done; \
+	cd ../../; \

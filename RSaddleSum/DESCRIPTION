@@ -1,0 +1,11 @@
+Package: RSaddleSum
+Version: 1.4.0
+Date:    2010-09-19
+Title:   Saddlepoint approximation to the cdf of a sum of random variables.
+Author:  Aleksandar Stojmirovic <stojmira@ncbi.nlm.nih.gov>
+Maintainer:  Aleksandar Stojmirovic <stojmira@ncbi.nlm.nih.gov>
+Depends: R (>= 2.6.0)
+Description: A function to produce a fast asymptotic approximation to the cdf
+	     of a sum of i.i.d. random variables given a sample of values.
+License: Public Domain
+URL:     http://www.ncbi.nlm.nih.gov/CBBresearch/qmbp/mn/enrich

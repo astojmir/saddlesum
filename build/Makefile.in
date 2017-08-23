@@ -1,0 +1,80 @@
+# @configure_input@
+
+# Package-related substitution variables
+PACKAGE = @PACKAGE_NAME@
+VERSION = @PACKAGE_VERSION@
+TARNAME = @PACKAGE_TARNAME@
+DISTDIR = $(TARNAME)-$(VERSION)
+
+# Prefix-related substitution variables
+datarootdir = @datarootdir@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+mandir      = @mandir@
+datadir     = @datadir@
+
+vpath %.c ../external/cephes:../external/hashtable:../lib:../progs
+vpath %.h ../include
+
+SSUM_HEADERS = stack.h saddlesum.h hypergeom.h enrich.h fsfile.h \
+               cvterm.h entity.h miscutils.h termdb2entities.h
+SSUM_OBJS = stack.o saddlesum.o hypergeom.o enrich.o fsfile.o \
+            cvterm.o entity.o gmtdb.o memalloc.o hashfuncs.o \
+            termdb2entities.o absprintf.o fileread.o ncbi_gene.o \
+            enrich_print.o etermdb.o
+CEPHES_HEADERS = mconf.h
+CEPHES_OBJS = ndtr.o const.o polevl.o expx2.o mtherr.o
+HASHTABLE_HEADERS = hashtable.h hashtable_itr.h hashtable_utility.h \
+                    hashtable_private.h
+HASHTABLE_OBJS = hashtable.o hashtable_itr.o hashtable_utility.o
+
+OBJECTS = $(SSUM_OBJS) $(CEPHES_OBJS) $(HASHTABLE_OBJS)
+
+
+# gcc flags
+CC = @CC@
+CWARNINGS = -Wall -Wno-char-subscripts -Wshadow \
+            -Wwrite-strings -Wstrict-prototypes \
+            -Wformat -Wmissing-prototypes -funsigned-char #-Werror
+
+LDLIBS = -lm
+
+# Note: we use -std=gnu89 instead of -std=c99 or -std=gnu99 because on gcc 4.3 and after,
+# old versions of glibc result in a broken behavior (related to inline).
+CFLAGS = @CFLAGS@ -std=gnu89 -I../include @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+
+.PHONY: all clean
+
+all: saddlesum saddlesum-show-etd
+
+saddlesum: $(SSUM_OBJS) $(CEPHES_OBJS) $(HASHTABLE_OBJS) saddlesum_prog.o
+
+saddlesum-show-etd: saddlesum-show-etd.o $(SSUM_OBJS) $(CEPHES_OBJS) $(HASHTABLE_OBJS)
+
+saddlesum-show-etd.o: CFLAGS += $(CWARNINGS) -D 'VERSION="$(VERSION)"'
+saddlesum-show-etd.o: $(SSUM_HEADERS)
+
+saddlesum_prog.o: CFLAGS += $(CWARNINGS) -D 'VERSION="$(VERSION)"'
+saddlesum_prog.o: $(SSUM_HEADERS)
+
+$(SSUM_OBJS): CFLAGS += $(CWARNINGS)
+$(SSUM_OBJS): $(SSUM_HEADERS) $(HASHTABLE_HEADERS)
+
+$(CEPHES_OBJS): $(CEPHES_HEADERS)
+
+$(HASHTABLE_OBJS): CFLAGS += -Wall
+$(HASHTABLE_OBJS): $(HASHTABLE_HEADERS)
+
+clean:
+	rm -f *.o saddlesum saddlesum-show-etd;
+
+install:
+	install -d @bindir@
+	install -m 0755 saddlesum @bindir@
+	install -m 0755 saddlesum-show-etd @bindir@
+
+uninstall:
+	rm -f @bindir@/saddlesum
+	rm -f @bindir@/saddlesum-show-etd

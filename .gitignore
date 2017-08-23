@@ -1,0 +1,21 @@
+# Lines starting with '#' are considered comments.
+*.o
+*.a
+*.so
+*.os
+*.pyc
+*~
+*.sconsign.dblite
+#*.*#
+MANIFEST
+VERSION
+dist/
+*_build
+SaddleSum/swig/saddlesum_wrap.c
+SaddleSum/build/saddlesum
+SaddleSum/build/saddlesum-show-etd
+SaddleSum/swig/Makefile
+SaddleSum/build/Makefile
+SaddleSum/Makefile
+SaddleSum/autom4te.cache
+SaddleSum/config.status

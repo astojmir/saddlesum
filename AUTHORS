@@ -1,0 +1,20 @@
+All standalone SaddleSum code was written by Aleksandar Stojmirovic and is
+placed into Public Domain (see LICENSE file), with the following exceptions:
+
+* include/mconf.h and all files in external/cephes were taken from Cephes Math
+  Library (Copyright 1984, 1995, 2000 by Stephen L. Moshier). According to the
+  notice placed with the original source code, the author gave permision for his
+  code to be used freely.
+
+* external/hashtable/*.c and include/hashtable*.h file were taken from C Hash
+  Table library by Christopher Clark, released under New BSD licence.
+
+
+The research leading to SaddleSum was performed by Aleksandar Stojmirovic and
+Yi-Kuo Yu. Please cite
+
+A.Stojmirovic and Y-K. Yu. Robust and accurate data enrichment statistics via
+distribution function of sum of weights. Bioinformatics, 26(21):2752-2759, 2010.
+
+Special thanks to Alexander Bliskovsky for writing the code to import KEGG
+datasets and to download and maintain all term databases.

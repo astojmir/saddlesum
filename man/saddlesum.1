@@ -1,0 +1,270 @@
+.TH "SADDLESUM" "1" "July 09, 2011" "1.2.2" "SaddleSum"
+.SH NAME
+saddlesum \- A program for term enrichment analysis based on Lugananni-Rice statistics
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.\" Man page generated from reStructeredText.
+.
+.SH SYNOPSIS
+.sp
+The standalone saddlesum interface takes the following general form:
+.sp
+.nf
+.ft C
+saddlesum [options] <weights_file> [<namespace>:]<term_db> [<namespace>:<term_db> ...]
+.ft P
+.fi
+.SH OPTIONS
+.SS Arguments
+.INDENT 0.0
+.TP
+.B <weights_file>
+.
+Tab\-delimited file with entity ids and weights. If
+\fC<weights_file>\fP is specified as \fC\-\fP, use standard input.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B <namespace>:<term_db>
+.
+The text up to the first column denotes the namespace label while
+the rest of the argument denotes a path to a term database. For the
+first database, the namespace component can be omitted, in which
+case the file is assumed to be in ETD format. All subsequent
+databases should be in GMT format and have namespeace specified.
+This allows combining multiple databases to obtain joint
+results. Significant terms for each namespace are treated separately.
+.UNINDENT
+.SS Generic options
+.INDENT 0.0
+.TP
+.B \-h
+.
+Print a description of all command line options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-V
+.
+Print the version number and exit. The version number always
+matches that of the \fIqmbpmn\-tools\fP.
+.UNINDENT
+.SS Statistical options
+.INDENT 0.0
+.TP
+.B \-m <min_term_size>
+.sp
+Set the minimum number of entities for a term to be considered
+(\fIdefault\fP = 2). Only entites with supplied weights count towards
+the term size.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-e <Evalue_cutoff>
+.sp
+Set the largest E\-value for a term to be considered \fIsignificant\fP
+(\fIdefault\fP = 1e\-02).
+.IP Note
+.
+Since saddlesum uses an algorithm that quickly rejects those
+terms that cannot have an E\-value smaller than \fC<Evalue_cutoff>\fP,
+the choice of \fC<Evalue_cutoff>\fP can significantly affect the
+running time of the program.
+.RE
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-n <effective_db_size>
+.sp
+Set the effective term database size for applying Bonferroni
+correction (i.e. calculating E\-values) to P\-values output by the
+algorithm (\fIdefault\fP = the total number of terms
+considered). Setting \fC<effective_db_size>\fP to 1.0 will result in the
+original P\-values being returned.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s <statistics_type>
+.sp
+Set statistical method used to evaluate P\-values. The argument must
+be one of the following:
+.INDENT 7.0
+.TP
+.B \fCwsum\fP (\fIdefault\fP)
+.sp
+use SaddleSum statistics based on sum\-of\-weights score for each term
+.TP
+.B \fChgem\fP
+.sp
+use one\-sided Fisher\(aqs Exact test.
+.UNINDENT
+.IP Note
+.
+Option \-s hgem implies option \-d (whether specified or
+not). Also, one of \-r or \-w options must be used to specify the
+cutoff for selecting weights.
+.RE
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-a
+.
+When this option is specified, all weights that can be mapped to
+valid entities are used as statistical background. Otherwise, only
+those weights that both map to a valid entity and a vocabulary term
+in the term database are used.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-x <namespace>
+.sp
+Exclude \fC<namespace>\fP from ETD database. Each ETD database may
+contain multiple namespaces. This option allows specific namespaces
+to be totally excluded from consideration. It affects the effective
+database and hence the term E\-values. More than one namespace can
+be excluded by using this option multiple times.
+.IP Note
+.
+Use saddlesum\-show\-etd program to discover the
+names of all namespaces present in an ETD file.
+.RE
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-T <term_id>
+.sp
+Compute statistics only for the term with ID \fC<term_id>\fP and
+display the list of entities associated with that term, together
+with their weights. All other statistical and weight processing
+options can be specified in conjunction with \-T but \-e has no
+effect.
+.IP Note
+.
+If specifying \-m results in the term to be excluded from
+computation of P\-value, no statistics will be computed and displayed.
+.RE
+.UNINDENT
+.SS Weight processing options
+.INDENT 0.0
+.TP
+.B \-t <weight_transformation>
+.sp
+Apply a transformation to each of the provided weights prior to
+other applying other processing options (see below) and
+calculating enrichment statistics. The argument must be one of the
+following:
+.INDENT 7.0
+.TP
+.B \fCflip\fP
+.sp
+flip the sign of each weight
+.TP
+.B \fCabs\fP
+.sp
+take the absolute value of each weight.
+.UNINDENT
+.sp
+When this option is omitted, no transformation will be performed.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-r <rank_cutoff>
+.sp
+Set all weights ranked lower than \fC<rank_cutoff>\fP to 0. If there
+are several weights tied at \fC<rank_cutoff>\fP, keep all of them.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w <weight_cutoff>
+.sp
+Set all weights smaller than \fC<weight_cutoff>\fP to 0.
+.UNINDENT
+.IP Note
+.
+Only one of the \fC\-r\fP and \fC\-w\fP options can be set at the same time.
+.RE
+.INDENT 0.0
+.TP
+.B \-d
+.
+Discretize weights. Set all weights greater than 0 to 1 and all
+those smaller than 0 to 0.
+.UNINDENT
+.IP Note
+.
+The weight processing options are applied in this order: \fC\-t\fP,
+then \fC\-r\fP or \fC\-w\fP and finally \fC\-d\fP.
+.RE
+.SS Output options
+.INDENT 0.0
+.TP
+.B \-O <output_file>
+.sp
+Output results to \fC<output_file>\fP instead of to the standard output.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-F <output_format>
+.sp
+Select output format. The argument must be one of the following:
+.INDENT 7.0
+.TP
+.B \fCtxt\fP (\fIdefault\fP)
+.sp
+print results as formatted (pretty) text.
+.TP
+.B \fCtab\fP
+.sp
+print results as a  tab\-delimited file. Different sections are
+separated by heading lines starting with \fC#\fP character.
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-W
+.
+Print warnings about entity identifiers from the
+\fC<weights_file>\fP.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-U
+.
+Print ids from \fC<weights_file>\fP that are not present in the term
+databases.
+.UNINDENT
+.IP Note
+.
+Options \-W and \-U apply only to text output. Tab\-delimited ouput
+always contains sections containing warnings and unknown ids.
+.RE
+.SH AUTHOR
+Aleksandar Stojmirovic
+.\" Generated by docutils manpage writer.
+.\" 
+.

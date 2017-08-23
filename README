@@ -1,0 +1,223 @@
+Standalone SaddleSum
+====================
+
+
+Summary
+-------
+
+Robust and accurate data enrichment statistics via distribution function of sum
+of weights
+
+Term enrichment analysis facilitates biological interpretation by assigning to
+experimentally/computationally obtained data annotation associated with terms
+from controlled vocabularies. This process usually involves obtaining
+statistical significance for each vocabulary term and using the most significant
+terms to describe a given set of biological entities, often associated with
+weights. Many existing enrichment methods require selections of (arbitrary
+number of) the most significant entities and/or do not account for weights of
+entities. Others either mandate extensive simulations to obtain statistics or
+make assumptions about data distribution that need not be justifiable. In
+addition, most methods have difficulty assigning correct statistical
+significance to terms with few entities.
+
+Implementing the well-known Lugananni-Rice formula, we have developed a novel
+approach, called SaddleSum, that is free from all these undesirable
+constraints. It approximates the distribution of sum of weights asymptotically
+by saddlepoint method to arrive at analytically and computationally tractable
+form.
+
+We evaluated SaddleSum against several existing methods and demonstrated its
+ability to adapt equally well to distributions with widely different
+properties. With entity weights properly taken into account, SaddleSum is
+internally consistent and stable with respect to the choice of number of most
+significant entities selected. Making few assumptions on the input data, the
+proposed method is universal and can thus be applied to areas beyond analysis of
+microarrays, such as deep sequencing, quantitative proteomics and in silico
+network simulations. SaddleSum also provides a term-size dependent score
+distribution function that gives rise to accurate statistical significance even
+for terms with few entities. As a consequence, SaddleSum enables researchers to
+place confidence in its significance assignments to small terms that are often
+biologically most specific.
+
+
+SaddleSum software
+------------------
+
+**SaddleSum** is available in two versions, web and standalone. The web version is
+mostly written in Python programming language and is a part of **qmbpmn-tools**
+package, which also includes **ITM Probe**, a framework for analysis of information
+flow in interaction networks based on random walks. The **qmbpmn-tools** package
+depends on a number of external Python libraries and on the Graphviz suite for
+visualizing graphs. The source code for **qmbpmn-tools** will be made available
+in the future.
+
+The standalone version is written completely in the C programming language and has
+no dependencies beyond the gcc compiler and GNU make (although it is likely that
+it can be adapted to compile using other development tools). It provides a
+command line interface and uses term databases in a simple tab-delimited format
+(GMT), as well as in SaddleSum's own ETD (Extended Term Database) format.
+
+The same C code is used by both the web and the standalone version to compute
+the enrichment P-values using Lugananni-Rice formula.
+
+Building and installing executables
+-----------------------------------
+
+The source code for the standalone **SaddleSum** is available from the NCBI FTP site
+(ftp://ftp.ncbi.nih.gov/pub/qmbpmn/SaddleSum/src) as a tar.gz archive. Releases
+of **SaddleSum** share the version numbering with the corresponding
+**qmbpmn-tools**.
+
+After downloading a source code, extract it to a chosen directory and enter the
+``saddlesum-<version>`` directory. The standard process of::
+
+  ./configure
+  make
+  make install
+
+should install the binaries into your executable directory. To clean the build,
+type ``make clean``. This requires gcc and GNU make.
+
+We have successfully built the source on Linux systems, Mac OS X with gcc and on
+Windows XP using MinGW. It may be possible to build it on other platforms but we
+have not attempted to do so.
+
+Obtaining Term Datasets
+-----------------------
+
+Term datasets corresponding to the three Gene Ontology (GO) categories
+and KEGG pathways are available for a number of species in both ETD and GMT
+format (gzipped). ETD datasets are recommended but GMT versions of the
+same data is provided for compatibility with the earlier version. The
+FTP link is ftp://ftp.ncbi.nih.gov/pub/qmbpmn/SaddleSum/term_datasets . The
+most recently built datasets are available under in the *current* subdirectory.
+
+The naming of the GMT files follows the convention::
+
+  <database>-<species>.gmt.gz
+
+The <database> field is either ``GO-<category>`` or ``KEGG``, where ``category``
+is one of ``mf`` (molecular function), ``bp`` (biological process) or ``cc``
+(cellular component). The species field uses KEGG three-letter convention. The
+currently available species are:
+
+========== =========================
+KEGG code  Species
+========== =========================
+ath        Arabidopsis thaliana
+cel        Caenorhabditis elegans
+dre        Danio rerio
+dme        Drosophila melanogaster
+hsa        Homo sapiens
+mmu        Mus musculus
+pfa        Plasmodium falciparum
+rno        Rattus norvegicus
+sce        Saccharomyces cerevisiae
+========== =========================
+
+For example ``GO-bp-pfa.gmt.gz`` contains the GO biological process database for
+*Plasmodium falciparum*.
+
+Each ETD file contains all provided term datasets for a single species
+(the three GO namespaces plus KEGG). The naming of the ETD files
+follows the convention::
+
+  <species>.etd.gz
+
+The species field again uses the KEGG three letter codes shown above.
+
+Using SaddleSum
+---------------
+
+Standalone **SaddleSum** has a simple command line interface::
+
+    saddlesum [options] <weights_file> [<namespace>:]<term_db> [<namespace>:<term_db> ...]
+
+For full list of options, type::
+
+    saddlesum -h
+
+or see the :ref:`command-line-label` page in this manual.
+
+The ``<weights_file>`` argument can either be a filename path or ``-``, which
+means that the weights are to be taken from the command line. The weights are
+supplied in the two-column tab-delimited format, where the first column gives
+entity (gene) IDs, while the second gives their weights as floating point
+numbers. No comment lines or multiple columns are allowed.
+
+Entity IDs depend on the term database being searched. Each ETD database
+contains, in addition to the term datasets, an abbreviated version of
+the NCBI Gene database for its species. Thus, when using an ETD
+database, SaddleSum is able to interpret entity IDs provided as Gene
+IDs, as gene symbols and as gene aliases. If provided symbol is
+ambiguous, SaddleSum reports a warning or an error, depending on
+whether the ambiguity can be resolved.
+
+The GMT term databases supplied on our FTP site use NCBI Gene IDs to
+label genes and hence the weights supplied to ``saddlesum`` program
+must also use NCBI Gene IDs to supply weights. We have decided on
+using NCBI Gene IDs for this purpose because many genes have several
+widely-used names, while GMT format does not allow specifying aliases.
+
+The database arguments are in the format ``<namespace>:<term_db>``
+where ``<namespace>`` is an arbitrary namespace label and
+``<term_db>`` is the path to the term database. The first database can
+be specified without the ``<namespace>`` label, which indicates that
+the ``<term_db>`` is an ETD file. If ``<namespace>`` is present, a GMT
+dataset is assumed. All subsequent arguments must specify the
+namespace part and the term datasets must be in GMT format. In this
+way, it is possible to combine an ETD database with several GMT
+ones. The recommended use for GMT databases is to create customized
+databases containing associations that cannot be found in GO or KEGG.
+
+Namespace labels for GMT databases can be repeated. Significant terms
+under the same namespace are sorted and printed together, with each
+results table headed by the ``<namespace>`` label. Term datasets
+within an ETD database already contain their namespace labels, which
+can be inspected using the :ref:`saddlesum-show-etd-label` utility.
+
+
+Examples
+--------
+
+The ``examples/`` subdirectory contains several examples of weights
+from microarrays (log2 ratios) and term databases. All the examples
+were taken from the NCBI GEO database and have the extension
+``.tab``. The database files are in GMT format and have extension
+``.gmt``. Copy ``saddlesum`` executable to your path and try the
+following examples::
+
+    saddlesum GDS3184_GSM253560_up_geneid.tab test:GO-bp-rno.gmt
+    saddlesum GDS3184_GSM253560_down_geneid.tab test:GO-bp-rno.gmt
+
+    saddlesum GDS2338_GSM102668_up_geneid.tab test:KEGG-sce.gmt
+    saddlesum GDS2338_GSM102668_down_geneid.tab test:KEGG-sce.gmt
+
+    saddlesum GDS2352_GSM89756_up_geneid.tab test:GO-cc-hsa.gmt
+    saddlesum GDS2352_GSM89756_down_geneid.tab test:GO-cc-hsa.gmt
+
+One can also experiment with options, such as setting the cutoffs and
+similar. Note that the down-regulated weights were obtained by flipping the sign
+on the original log2 ratios and setting all weights smaller than zero to zero
+(please see our paper for explanation).
+
+
+License
+-------
+
+All code for standalone **SaddleSum** written at the NCBI is
+released into Public Domain. Please see the COPYING file. The full
+credits are in the AUTHORS file.
+
+Reference
+---------
+
+A.Stojmirovic and Y-K. Yu. Robust and accurate data enrichment statistics via
+distribution function of sum of weights. Bioinformatics, 26(21):2752-2759, 2010.
+
+
+Contact
+-------
+
+Please write to bagherigh-at-ncbi.nlm.nih.gov for any bug reports, suggestions or
+requests related to **SaddleSum**.

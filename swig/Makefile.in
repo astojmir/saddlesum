@@ -1,0 +1,36 @@
+# @configure_input@
+
+OBJECTS = saddlesum.o ndtr.o const.o polevl.o expx2.o mtherr.o
+HEADERS = saddlesum.h mconf.h
+INCS = -I ../include
+PYTHONINCS = -I `python -c 'import sys, numpy; sys.stdout.write(numpy.get_include())'` \
+       -I `python -c 'import sys, distutils.sysconfig as d; sys.stdout.write(d.get_python_inc())'`
+
+CC := @CC@
+CFLAGS = @CFLAGS@ @CPPFLAGS@ -pthread -fno-strict-aliasing -DNDEBUG -fwrapv \
+          -Wall -Wstrict-prototypes -fPIC $(INCS)
+
+vpath %.c ../external/cephes:../lib
+vpath %.h ../include
+
+.PHONY: all pkginstall clean srcclean
+
+all: _saddlesum.so
+
+_saddlesum.so: $(OBJECTS) saddlesum_wrap.o
+	$(CC) -pthread -shared \
+               $(OBJECTS) saddlesum_wrap.o -lm -o _saddlesum.so
+
+$(OBJECTS): $(HEADERS)
+
+saddlesum_wrap.o: INCS += $(PYTHONINCS)
+saddlesum_wrap.o: saddlesum_wrap.c
+
+saddlesum_wrap.c: saddlesum.i
+	swig -python -noproxy -noh -o saddlesum_wrap.c saddlesum.i
+
+clean:
+	rm -f *.o saddlesum_wrap.c _saddlesum.so
+
+srcclean: clean
+	rm -f *~;
